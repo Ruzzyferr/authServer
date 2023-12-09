@@ -9,9 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
@@ -19,9 +17,13 @@ public class JwtService {
 
     private static final String SECRET_KEY = "l8JXuuDDsFB5Cp+uVI7VQ3Yh0ffjgWn8C4G5fWqw4bA=";
     private static final int validity = 60 * 60 * 1000;
+
+    private Set<String> tokenBlacklist = new HashSet<>();
+
     public String extractUsername(String jwt) {
         return extractClaim(jwt, Claims::getSubject);
     }
+
 
     public <T> T extractClaim(String token, Function<Claims,T> claimResolver){
         final Claims claims = extractAllClaims(token);
@@ -44,7 +46,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token) && !isTokenBlacklisted(token);
     }
 
 
@@ -78,7 +80,7 @@ public class JwtService {
     }
 
     public boolean tokenValidate(String token) {
-        if (getUsernameToken(token) != null && isExpired(token)) {
+        if (getUsernameToken(token) != null && isExpired(token) && !isTokenBlacklisted(token)) {
             return true;
         }
         return false;
@@ -93,6 +95,15 @@ public class JwtService {
 
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public void invalidateToken(String token) {
+        tokenBlacklist.add(token);
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        // Token "blacklist"te ise false dönecek
+        return tokenBlacklist.contains(token);
     }
 
 }
