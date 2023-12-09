@@ -1,0 +1,23 @@
+server:
+  port : 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authServer
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      properties:
+        hibernate:
+          jdbc:
+            time_zone: UTC
+    show-sql: true
+
+  jwt:
+    secret: ${JWT_SECRET:default_authServer_token}
+    expiration: 3600000
+    header: Authorization
+    prefix: Bearer
